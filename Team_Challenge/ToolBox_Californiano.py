@@ -74,13 +74,15 @@ def clasifica_variables(df, umbral_categoria, umbral_continua):
 
         if cardinalidad == 2:
             tipo = "Binaria"
+        elif cardinalidad == 1:
+            tipo = "Constante"
         elif cardinalidad < umbral_categoria:
             tipo = "Categórica"
         elif cardinalidad >= umbral_categoria:
             if es_numerica:
                 tipo = "Numérica Continua" if porcentaje_cardinalidad >= umbral_continua else "Numérica Discreta"
             else:
-                tipo = "Categórica"
+                tipo = "Categórica de excesiva cardinalidad"
         else:
             tipo = "Indefinida"
 
@@ -124,7 +126,8 @@ def get_features_num_regression(dataframe,target_col,umbral_corr: float,pvalue=N
     
     else:
         #ESTUDIO DE LA CORRELACION ENTRE LAS COLUMNAS NUMERICAS Y LA TARGET_COL.
-        numericas= dataframe.drop(columns=target_col).select_dtypes(include=[np.number]).columns.tolist()
+        df_clasificacion=clasifica_variables(dataframe,umbral_cat,0.05)
+        numericas= df_clasificacion[(df_clasificacion["tipo_sugerido"]=="Numérica Continua") | (df_clasificacion["tipo_sugerido"]=="Numérica Discreta")]["nombre_variable"].to_list()
         features_num=[]
         print(f"La correlacion entre las columnas numericas y el target debe superar: {umbral_corr}")
         print("---------------------------------------------------------------------------")
@@ -171,8 +174,9 @@ def plot_features_num_regression(dataframe, target_col="", columns=[], umbral_co
         raise ValueError("El argumento 'pvalue' debe ser un número entre 0 y 1 o 'None'.")
     
     # Si columns está vacío, tomar las columnas numéricas
+    df_clasificacion=clasifica_variables(dataframe,20,0.05)
     if not columns:
-        columns = dataframe.select_dtypes(include=[float, int]).columns.tolist()
+        columns = df_clasificacion[(df_clasificacion["tipo_sugerido"]=="Numérica Continua") | (df_clasificacion["tipo_sugerido"]=="Numérica Discreta")]["nombre_variable"].to_list()
         if target_col in columns:
             columns.remove(target_col)  # Remover target_col si está en la lista de columnas
     
@@ -233,7 +237,8 @@ def get_features_cat_regression(dataframe, target_col, pvalue=0.05):
         return None
 
     #Filtra las columnas categóricas
-    cat_columns = [col for col in dataframe.columns if (dataframe[col].dtype == 'object' or isinstance(dataframe[col].dtype, pd.CategoricalDtype))&(dataframe[col].nunique() < 20)]
+    df_clasificacion=clasifica_variables(dataframe,20,0.05)
+    cat_columns = df_clasificacion[(df_clasificacion["tipo_sugerido"]=="Categórica") | (df_clasificacion["tipo_sugerido"]=="Binaria")]["nombre_variable"].to_list()
 
     #Aplica pruebas estadísticas para determinar la relación
     related_columns = []
@@ -255,7 +260,7 @@ def get_features_cat_regression(dataframe, target_col, pvalue=0.05):
 
 def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.05, with_individual_plot=False):
     '''La función recibe un dataframe y analiza las variables categoricas significativas con la variable target, 
-    si no detecta variables categoricas significativas, ejecuta analisis de variables numericas significativas 
+    si no detecta variables categoricas significativas, ejecuta analisis de variables categoricas significativas 
     con target mostrando histograma de los datos
     
     Argumentos: 
