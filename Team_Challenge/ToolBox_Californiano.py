@@ -205,7 +205,53 @@ def plot_features_num_regression(dataframe, target_col="", columns=[], umbral_co
     
     return valid_columns
 
+def get_features_cat_regression(dataframe, target_col, pvalue=0.05):
+    """
+    Identifica las columnas categóricas en un DataFrame que tienen una relación significativa con una columna objetivo numérica, basada en un nivel de confianza estadístico.
 
+    Argumentos:
+    -Dataframe: El conjunto de datos que contiene las columnas a analizar.
+    -Target: El nombre de la columna objetivo, que debe ser numérica.
+    -pvalue: El nivel de significación estadística para considerar una relación significativa
+                
+
+    Retorna: Una lista con los nombres de las columnas categóricas que tienen una relación estadísticamente significativa con la columna objetivo.
+    """
+    #Verifica si target_col es numérica
+    if (dataframe[target_col].dtype not in [np.int64, np.float64]):
+        print(f"La columna '{target_col}' no es numérica.")
+        return None
+
+    #Verifica la cardinalidad de target_col
+    if dataframe[target_col].nunique() < 20:
+        print("La columna objetivo debe tener al menos 20 valores únicos.")
+        return None
+
+    #Verifica si pvalue está en el rango válido
+    if not (0 < pvalue <= 1):
+        print("El valor de 'pvalue' debe estar entre 0 y 1.")
+        return None
+
+    #Filtra las columnas categóricas
+    cat_columns = [col for col in dataframe.columns if dataframe[col].dtype == 'object' or isinstance(dataframe[col].dtype, pd.CategoricalDtype)]
+
+    #Aplica pruebas estadísticas para determinar la relación
+    related_columns = []
+    for col in cat_columns:
+                
+        try:
+            dataframe[col] = dataframe[col].fillna("Desconocido")
+            # Realiza ANOVA para evaluar la relación entre la categórica y la numérica
+            groups = [dataframe[dataframe[col] == category][target_col] for category in dataframe[col].unique()]
+            stat, p = f_oneway(*groups)
+
+            # Agrega columna si el p-valor es menor al nivel de significación
+            if p < pvalue:
+                related_columns.append(col)
+        except Exception as e:
+            print(f"No se pudo evaluar la columna '{col}': {e}")
+
+    return related_columns
 
 def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.05, with_individual_plot=False):
     '''La función recibe un dataframe y analiza las variables categoricas significativas con la variable target, 
