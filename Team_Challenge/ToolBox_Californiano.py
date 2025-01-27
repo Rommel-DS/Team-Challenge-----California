@@ -206,90 +206,43 @@ def plot_features_num_regression(dataframe, target_col="", columns=[], umbral_co
     return valid_columns
 
 
-def get_features_cat_regression(dataframe, target_col, pvalue=0.05):
-    """
-    Identifica las columnas categóricas en un DataFrame que tienen una relación significativa con una columna objetivo numérica, basada en un nivel de confianza estadístico.
 
-    Argumentos:
-    -Dataframe: El conjunto de datos que contiene las columnas a analizar.
-    -Target: El nombre de la columna objetivo, que debe ser numérica.
-    -pvalue: El nivel de significación estadística para considerar una relación significativa
-                
-
-    Retorna: Una lista con los nombres de las columnas categóricas que tienen una relación estadísticamente significativa con la columna objetivo.
-    """
-    #Verifica si target_col es numérica
-    if (dataframe[target_col].dtype not in [np.int64, np.float64]):
-        print(f"La columna '{target_col}' no es numérica.")
-        return None
-
-    #Verifica la cardinalidad de target_col
-    if dataframe[target_col].nunique() < 20:
-        print("La columna objetivo debe tener al menos 20 valores únicos.")
-        return None
-
-    #Verifica si pvalue está en el rango válido
-    if not (0 < pvalue <= 1):
-        print("El valor de 'pvalue' debe estar entre 0 y 1.")
-        return None
-
-    #Filtra las columnas categóricas
-    cat_columns = [col for col in dataframe.columns if dataframe[col].dtype == 'object' or isinstance(dataframe[col].dtype, pd.CategoricalDtype)]
-
-    #Aplica pruebas estadísticas para determinar la relación
-    related_columns = []
-    for col in cat_columns:
-                
-        try:
-            dataframe[col] = dataframe[col].fillna("Desconocido")
-            # Realiza ANOVA para evaluar la relación entre la categórica y la numérica
-            groups = [dataframe[dataframe[col] == category][target_col] for category in dataframe[col].unique()]
-            stat, p = f_oneway(*groups)
-
-            # Agrega columna si el p-valor es menor al nivel de significación
-            if p < pvalue:
-                related_columns.append(col)
-        except Exception as e:
-            print(f"No se pudo evaluar la columna '{col}': {e}")
-
-    return related_columns
-
-
-
-def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.5, with_individual_plot= False):
-    '''La función recibe un dataframe y analiza las variables categoricas significativas con la variable target, si no detecta variables categoricas significativas, ejecuta analisis de variables numericas significativas con target mostrando histograma de los datos
+def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.05, with_individual_plot=False):
+    '''La función recibe un dataframe y analiza las variables categoricas significativas con la variable target, 
+    si no detecta variables categoricas significativas, ejecuta analisis de variables numericas significativas 
+    con target mostrando histograma de los datos
     
-    Argumento: 
+    Argumentos: 
     1. dataframe: DataFrame a analizar
     2. target_col: variable objetivo de estudio
     3. columns: por defecto vacia, son las variables categoricas a analizar. 
-    3. pvalue: pvalue que por defecto se establece en 0.5
-    4. with_indivual_plot : indica si queremos generar y mostrar un histograma separado 
+    4. pvalue: pvalue que por defecto se establece en 0.5
+    5. with_indivual_plot : indica si queremos generar y mostrar un histograma separado 
     por cada variable categorica significativa, por defecto False: se presentan agrupadas
 
     Retorna:
-    1. Si no hay variables categoricas, ejecuta la funcion get_features_num_regresion
-    2. Si hay variables categoricas, pintamos los histogramas de la variable target con cada una de las variables categoricas significativas
-            2.1 individuales si hemos marcado with_individual_plot = True
-            2.2 por defecto de forma agrupada'''
+    1. Si no hay variables categóricas, ejecuta la función get_features_num_regresion
+    2. Si hay variables categóricas, pintamos los histogramas de la variable target con cada una de las variables categóricas significativas
+        2.1 individuales si hemos marcado with_individual_plot = True
+        2.2 por defecto de forma agrupada'''
     
-    # Esteblecemos la lista de variables categoricas significativas:
+    # Establecemos la lista de variables categóricas significativas:
     columns_cat_significativas = []
-    # En la funcion get_features_cat_regression hemos definido las variables categoricas significativas, 
-    # la llamamos para comprobar si nuestras variables estan en la lista de variables categoricas significativas.
+    # En la función get_features_cat_regression hemos definido las variables categóricas significativas, 
+    # la llamamos para comprobar si nuestras variables están en la lista de variables categóricas significativas.
     columnas_cat = get_features_cat_regression(dataframe, target_col, pvalue=0.5)
-    #Validamos si cumplen con el criterio de significacion cada variable, se incorporan solo las que cumplen.
+    # Validamos si cumplen con el criterio de significación cada variable, se incorporan solo las que cumplen.
     for col in columns:
         if col in columnas_cat:
             columns_cat_significativas.append(col)
 
-    # Si no hay ningun elemento en la lista:
-    if len(columns_cat_significativas)==0:
+    # Si no hay ningún elemento en la lista:
+    if len(columns_cat_significativas) == 0:
         print("No hay variables categóricas significativas")
-        return[]
-    # Si tenemos variables categoricas significativas a anailizar, pintamos los histogramas, 
-    # agrupados o por variable categorica frente al target
-   # Plotting de las variables categóricas significativas
+        return []
+    # Si tenemos variables categóricas significativas a analizar, pintamos los histogramas, 
+    # agrupados o por variable categórica frente al target
+    # Plotting de las variables categóricas significativas
     if with_individual_plot:
         for col in columns_cat_significativas:
             plt.figure(figsize=(12, 8))
@@ -306,6 +259,10 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
         num_plots = len(columns_cat_significativas)
         fig, axs = plt.subplots(num_plots, 1, figsize=(12, 8 * num_plots))
         
+        # Convertir axs a una lista si num_plots es 1
+        if num_plots == 1:
+            axs = [axs]
+        
         for i, col in enumerate(columns_cat_significativas):
             sns.histplot(data=dataframe, x=target_col, hue=col, multiple="dodge", 
                          palette="viridis", alpha=0.6, kde=True, ax=axs[i])
@@ -318,6 +275,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
         plt.show()
                     
     return  columns_cat_significativas
+
 
 
 
