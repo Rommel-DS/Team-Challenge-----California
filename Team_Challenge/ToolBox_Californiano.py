@@ -233,7 +233,7 @@ def get_features_cat_regression(dataframe, target_col, pvalue=0.05):
         return None
 
     #Filtra las columnas categóricas
-    cat_columns = [col for col in dataframe.columns if dataframe[col].dtype == 'object' or isinstance(dataframe[col].dtype, pd.CategoricalDtype)]
+    cat_columns = [col for col in dataframe.columns if (dataframe[col].dtype == 'object' or isinstance(dataframe[col].dtype, pd.CategoricalDtype))&(dataframe[col].nunique() < 20)]
 
     #Aplica pruebas estadísticas para determinar la relación
     related_columns = []
@@ -276,7 +276,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
     columns_cat_significativas = []
     # En la función get_features_cat_regression hemos definido las variables categóricas significativas, 
     # la llamamos para comprobar si nuestras variables están en la lista de variables categóricas significativas.
-    columnas_cat = get_features_cat_regression(dataframe, target_col, pvalue=0.5)
+    columnas_cat = get_features_cat_regression(dataframe, target_col, pvalue=0.05)
     # Validamos si cumplen con el criterio de significación cada variable, se incorporan solo las que cumplen.
     for col in columns:
         if col in columnas_cat:
@@ -293,7 +293,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
         for col in columns_cat_significativas:
             plt.figure(figsize=(12, 8))
             sns.histplot(data=dataframe, x=target_col, hue=col, multiple="dodge", 
-                         palette="viridis", alpha=0.6, kde=True)
+                         palette="viridis", alpha=0.6, kde=True, fill= True)
             plt.title(f'Histograma de {target_col} por {col}', fontsize=16)
             plt.xlabel(target_col, fontsize=14)
             plt.ylabel('Frecuencia', fontsize=14)
@@ -311,7 +311,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
         
         for i, col in enumerate(columns_cat_significativas):
             sns.histplot(data=dataframe, x=target_col, hue=col, multiple="dodge", 
-                         palette="viridis", alpha=0.6, kde=True, ax=axs[i])
+                         palette="viridis", alpha=0.6, kde=True, ax=axs[i], fill = True)
             axs[i].set_title(f'Histograma de {target_col} por {col}', fontsize=16)
             axs[i].set_xlabel(target_col, fontsize=14)
             axs[i].set_ylabel('Frecuencia', fontsize=14)
