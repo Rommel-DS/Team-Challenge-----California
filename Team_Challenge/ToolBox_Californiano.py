@@ -126,7 +126,7 @@ def get_features_num_regression(dataframe,target_col,umbral_corr: float,pvalue=N
     
     else:
         #ESTUDIO DE LA CORRELACION ENTRE LAS COLUMNAS NUMERICAS Y LA TARGET_COL.
-        df_clasificacion=clasifica_variables(dataframe,umbral_cat,0.05)
+        df_clasificacion=clasifica_variables(dataframe.drop(columns=target_col),umbral_cat,0.05)
         numericas= df_clasificacion[(df_clasificacion["tipo_sugerido"]=="Numérica Continua") | (df_clasificacion["tipo_sugerido"]=="Numérica Discreta")]["nombre_variable"].to_list()
         features_num=[]
         print(f"La correlacion entre las columnas numericas y el target debe superar: {umbral_corr}")
@@ -152,7 +152,7 @@ def get_features_num_regression(dataframe,target_col,umbral_corr: float,pvalue=N
                 corr, valor_p = pearsonr(dataframe[col], dataframe[target_col])
                 if valor_p < nivel_significancia:
                     features_num_filtrada.append(col)
-                    print(f"<{col}>: {valor_p} Si")
+                    print(f"<{col}>: p_value = {valor_p}  Si")
                 else:
                     print(f"<{col}>: No")
 
@@ -178,7 +178,7 @@ def plot_features_num_regression(dataframe, target_col="", columns=[], umbral_co
     if not columns:
         columns = df_clasificacion[(df_clasificacion["tipo_sugerido"]=="Numérica Continua") | (df_clasificacion["tipo_sugerido"]=="Numérica Discreta")]["nombre_variable"].to_list()
         if target_col in columns:
-            columns.remove(target_col)  # Remover target_col si está en la lista de columnas
+            columns.remove(target_col)  # eliminar target_col si está en la lista de columnas
     
     valid_columns = []
     for col in columns:
@@ -267,7 +267,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
     1. dataframe: DataFrame a analizar
     2. target_col: variable objetivo de estudio
     3. columns: por defecto vacia, son las variables categoricas a analizar. 
-    4. pvalue: pvalue que por defecto se establece en 0.5
+    4. pvalue: pvalue que por defecto se establece en 0.05
     5. with_indivual_plot : indica si queremos generar y mostrar un histograma separado 
     por cada variable categorica significativa, por defecto False: se presentan agrupadas
 
@@ -281,7 +281,7 @@ def plot_features_cat_regression(dataframe, target_col="", columns=[], pvalue=0.
     columns_cat_significativas = []
     # En la función get_features_cat_regression hemos definido las variables categóricas significativas, 
     # la llamamos para comprobar si nuestras variables están en la lista de variables categóricas significativas.
-    columnas_cat = get_features_cat_regression(dataframe, target_col, pvalue=0.05)
+    columnas_cat = get_features_cat_regression(dataframe, target_col, pvalue=pvalue)
     # Validamos si cumplen con el criterio de significación cada variable, se incorporan solo las que cumplen.
     for col in columns:
         if col in columnas_cat:
