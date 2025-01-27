@@ -1,10 +1,9 @@
 #Imports conjunto
 import pandas as pd
 import numpy as np
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, f_oneway
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import f_oneway
 
 def describe_df(df_origen):
     '''La función recibe un dataframe origen y devuelve un dataframe resultado 
