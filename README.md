@@ -1,7 +1,6 @@
 # Análisis y Visualización de Datos: Funciones para DataFrames en Python
 
-Este repositorio incluye un conjunto de funciones diseñadas para analizar y visualizar datos almacenados en DataFrames de Pandas. A continuación, se describe brevemente la funcionalidad de cada función.
-
+Este archivo contiene una serie de funciones diseñadas para analizar y visualizar datos en un entorno de regresión, identificando características numéricas y categóricas relevantes y generando gráficos asociados. A continuación, se detalla cada función:
 ---
 
 ## Funciones
